@@ -38,6 +38,10 @@
 | --- | --- |
 | [LSPosed-wiki](https://github.com/Vstory-Mirrors/LSPosed-wiki) | LSPosed 官方 Wiki 镜像（wiki 仓库无法 fork，为独立镜像） |
 
+## 自动巡检
+
+`.github/workflows/upstream-sync-check.yml` 每天 09:17（UTC+8）比对上面 16 个镜像与上游默认分支的 HEAD：有落后就开出带 `upstream-sync` 标签的 issue 并持续更新同一页，全部同步后自动关闭。
+
 ## 关于
 
 - 提交历史与上游完全一致，可直接用于 `git log`、`blame`、`diff` 检索
