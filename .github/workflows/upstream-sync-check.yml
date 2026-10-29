@@ -35,7 +35,7 @@ jobs:
             "LSParanoid|LSPosed/LSParanoid|master"
             "LSPlugin|LSPosed/LSPlugin|master"
             "AndroidHiddenApiBypass|LSPosed/AndroidHiddenApiBypass|main"
-            "DexBuilder|LSPosed/DexBuilder|master"
+            "DexBuilder|LSPosed/DexBuilder|main"
             "LSPosed-wiki|LSPosed/LSPosed.wiki|master"
             "Notice|Night-stars-1/Notice|modern-xposed-api"
             "io.mo.mnblocker|lm060719/io.mo.mnblocker|main"
