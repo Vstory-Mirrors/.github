@@ -36,6 +36,7 @@ jobs:
             "LSPlugin|LSPosed/LSPlugin|master"
             "AndroidHiddenApiBypass|LSPosed/AndroidHiddenApiBypass|main"
             "DexBuilder|LSPosed/DexBuilder|master"
+            "dexsql-release|LSPosed/dexsql-release|master"
             "LSPosed-wiki|LSPosed/LSPosed.wiki|master"
             "Notice|Night-stars-1/Notice|modern-xposed-api"
             "io.mo.mnblocker|lm060719/io.mo.mnblocker|main"
@@ -69,8 +70,9 @@ jobs:
           done
 
           echo "stale=$stale" >> "$GITHUB_OUTPUT"
+          echo "total=${#pairs[@]}" >> "$GITHUB_OUTPUT"
           {
-            echo "### 上游更新巡检：$stale / 16 个镜像落后"
+            echo "### 上游更新巡检：$stale / ${#pairs[@]} 个镜像落后"
             echo
             cat "$report"
             echo

@@ -13,6 +13,7 @@
 | [LSPlugin](https://github.com/Vstory-Mirrors/LSPlugin) | 插件模块 |
 | [AndroidHiddenApiBypass](https://github.com/Vstory-Mirrors/AndroidHiddenApiBypass) | LSPass：绕过非 SDK 接口限制 |
 | [DexBuilder](https://github.com/Vstory-Mirrors/DexBuilder) | 用 C++ 生成 dex 文件 |
+| [dexsql-release](https://github.com/Vstory-Mirrors/dexsql-release) | 用 SQL 查询 Android 的 apk / dex 文件 |
 
 ## libxposed
 
@@ -40,7 +41,7 @@
 
 ## 自动巡检
 
-`.github/workflows/upstream-sync-check.yml` 每天 09:17（UTC+8）比对上面 16 个镜像与上游默认分支的 HEAD：有落后就开出带 `upstream-sync` 标签的 issue 并持续更新同一页，全部同步后自动关闭。
+`.github/workflows/upstream-sync-check.yml` 每天 09:17（UTC+8）比对上面列出的镜像与上游默认分支的 HEAD：有落后就开出带 `upstream-sync` 标签的 issue 并持续更新同一页，全部同步后自动关闭。
 
 ## 关于
 
