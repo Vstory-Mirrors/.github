@@ -1,0 +1,102 @@
+name: 上游更新巡检
+
+on:
+  schedule:
+    # 每天 09:17 (UTC+8) = 01:17 UTC
+    - cron: "17 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: true
+
+env:
+  ORG: Vstory-Mirrors
+  LABEL: upstream-sync
+
+jobs:
+  check:
+    runs-on: ubuntu-26.04
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: 比对 fork 与上游
+        id: cmp
+        run: |
+          set -uo pipefail
+          pairs=(
+            "LSPosed|LSPosed/LSPosed|master"
+            "LSPlant|LSPosed/LSPlant|master"
+            "LSPlt|LSPosed/LSPlt|master"
+            "LSParanoid|LSPosed/LSParanoid|master"
+            "LSPlugin|LSPosed/LSPlugin|master"
+            "AndroidHiddenApiBypass|LSPosed/AndroidHiddenApiBypass|main"
+            "DexBuilder|LSPosed/DexBuilder|master"
+            "LSPosed-wiki|LSPosed/LSPosed.wiki|master"
+            "Notice|Night-stars-1/Notice|modern-xposed-api"
+            "io.mo.mnblocker|lm060719/io.mo.mnblocker|main"
+            "YukiHook|HighCapable/YukiHook|1.x"
+            "miuix|compose-miuix-ui/miuix|main"
+            "libxposed-api|libxposed/api|master"
+            "libxposed-helper|libxposed/helper|master"
+            "libxposed-service|libxposed/service|master"
+            "libxposed-example|libxposed/example|master"
+          )
+
+          report=/tmp/report.md
+          echo "| 仓库 | 上游 | 上游 HEAD | 状态 |" > "$report"
+          echo "| --- | --- | --- | --- |" >> "$report"
+
+          stale=0
+          for p in "${pairs[@]}"; do
+            IFS='|' read -r fork up br <<< "$p"
+            up_sha=$(git ls-remote "https://github.com/$up.git" "refs/heads/$br" 2>/dev/null | cut -f1)
+            fk_sha=$(git ls-remote "https://github.com/$ORG/$fork.git" "refs/heads/$br" 2>/dev/null | cut -f1)
+            if [ -z "$up_sha" ]; then
+              st="⚠️ 上游无此分支"; stale=$((stale+1))
+            elif [ -z "$fk_sha" ]; then
+              st="⚠️ fork 缺此分支"; stale=$((stale+1))
+            elif [ "$up_sha" = "$fk_sha" ]; then
+              st="✅"
+            else
+              st="🔴 落后（fork \`${fk_sha:0:7}\`）"; stale=$((stale+1))
+            fi
+            echo "| [$fork](https://github.com/$ORG/$fork) | [$up](https://github.com/$up/tree/$br) | \`${up_sha:0:7}\` | $st |" >> "$report"
+          done
+
+          echo "stale=$stale" >> "$GITHUB_OUTPUT"
+          {
+            echo "### 上游更新巡检：$stale / 16 个镜像落后"
+            echo
+            cat "$report"
+            echo
+            echo "_检查时间：$(date -u '+%Y-%m-%d %H:%M UTC')_"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 有更新时更新追踪 Issue
+        if: steps.cmp.outputs.stale != '0'
+        run: |
+          gh label create "$LABEL" --repo "$ORG/.github" --color 0e8a16 --description "上游更新巡检" 2>/dev/null || true
+          body="$(cat <<EOF
+          有 ${{ steps.cmp.outputs.stale }} 个镜像落后上游，需要在 fork 上 Sync 后更新知识库的 submodule 指针。
+
+          $(cat /tmp/report.md)
+          EOF
+          )"
+          num=$(gh api "repos/$ORG/.github/issues?state=open&labels=$LABEL&per_page=1" --jq '.[0].number // empty' 2>/dev/null)
+          if [ -n "$num" ]; then
+            gh api -X PATCH "repos/$ORG/.github/issues/$num" -f body="$body" > /dev/null
+          else
+            gh api -X POST "repos/$ORG/.github/issues" \
+              -f title="上游更新巡检" -f body="$body" -f "labels[]=$LABEL" > /dev/null
+          fi
+
+      - name: 全部同步则关闭追踪 Issue
+        if: steps.cmp.outputs.stale == '0'
+        run: |
+          num=$(gh api "repos/$ORG/.github/issues?state=open&labels=$LABEL&per_page=1" --jq '.[0].number // empty' 2>/dev/null)
+          [ -n "$num" ] && gh api -X PATCH "repos/$ORG/.github/issues/$num" -f state=closed > /dev/null || true
